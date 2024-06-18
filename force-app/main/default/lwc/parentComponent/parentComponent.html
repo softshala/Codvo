@@ -1,0 +1,6 @@
+<template>
+    <lightning-card title="Parent Component">
+        <lightning-input label="Pass Data from Parent" value={data} onchange={handledata}></lightning-input>
+        <c-child-component parentdata={data}></c-child-component>
+    </lightning-card>  
+</template>

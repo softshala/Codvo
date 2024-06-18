@@ -1,0 +1,7 @@
+<template>
+    <lightning-card title="Parent">
+        <p class="slds-var-m-horizontal_medium">Received the message1 {message1}</p>
+        <p class="slds-var-m-horizontal_medium">Received the message2 {message2}</p>
+        <c-child-main-component childdata={accountsData} onsendback={handleChildData}></c-child-main-component>
+    </lightning-card>
+</template>

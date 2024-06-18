@@ -1,0 +1,213 @@
+import { LightningElement, track } from 'lwc';
+import { subscribe, unsubscribe, onError } from 'lightning/empApi';
+import makeGetRequest from "@salesforce/apex/PostgridDataController.makeGetRequest";
+import saveContacts from "@salesforce/apex/PostgridDataController.saveContacts";
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+export default class ThirdPartyComponent extends LightningElement {
+    @track isLoading = false; // Tracked property to control spinner visibility
+    @track showData = false;  // Controls visibility of data-related components
+    @track events = [];       // Stores the current page of events to display
+    @track allEvents = [];    // Stores all fetched events
+    @track currentPage = 1;   // Current page index
+    @track pageSize = 3;      // Number of events per page
+    @track totalRecords = 0;  // Total number of fetched records
+    @track totalPages = 0;    // Total number of pages
+    @track selectedContacts = [];  // Tracks user-selected contacts for operations
+    subscription = null;  // Stores the subscription to the platform event
+
+    // Column configuration for the lightning-datatable
+    columns = [
+        { label: 'Postgrid ID', fieldName: 'id', type: 'text' },
+        { label: 'First Name', fieldName: 'firstName', type: 'text' },
+        { label: 'Last Name', fieldName: 'lastName', type: 'text' },
+        { label: 'Email', fieldName: 'email', type: 'email' },
+        { label: 'Phone', fieldName: 'phoneNumber', type: 'phone' },
+        { label: 'City', fieldName: 'city', type: 'text' },
+    ];
+
+    /**
+     * Lifecycle hook that runs when component is inserted into the DOM.
+     * It sets up event subscription and error handling.
+     */
+    connectedCallback() {
+        this.registerErrorListener();
+        this.handleSubscribe();
+        this.updateButtonStates();
+    }
+
+    /**
+     * Lifecycle hook that runs when component is removed from the DOM.
+     * It cleans up by unsubscribing from events to prevent memory leaks.
+     */
+    disconnectedCallback() {
+        this.handleUnsubscribe();
+    }
+
+    /**
+     * Registers for handling errors from the empApi streaming service.
+     */
+    registerErrorListener() {
+        onError(error => {
+            console.error('Streaming API Error: ', error);
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Error',
+                message: 'Streaming API error. See console for details.',
+                variant: 'error',
+                mode: 'sticky'
+            }));
+        });
+    }
+
+    /**
+     * Subscribes to a Platform Event to receive real-time data updates.
+     */
+    handleSubscribe() {
+        subscribe('/event/Postgrid_LWC_PE__e', -1, response => {
+            console.log('Platform event received:', response);
+            if (response.data.payload.Response__c) {
+                const parsedData = JSON.parse(response.data.payload.Response__c);
+                this.allEvents = parsedData.data;
+                this.totalRecords = parsedData.data.length;
+                this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+                this.updatePageData();
+                this.showData = true;
+                this.isLoading = false; // Hide spinner after data is handled
+            }
+        }).then(subscription => {
+            this.subscription = subscription;
+            console.log('Subscribed to platform event:', subscription.channel);
+            this.isLoading = false; // Hide spinner on error
+        });
+    }
+
+    /**
+     * Unsubscribes from the Platform Event when the component is destroyed or no longer needs updates.
+     */
+    handleUnsubscribe() {
+        if (this.subscription) {
+            unsubscribe(this.subscription, response => {
+                console.log('Unsubscribed from platform event:', response.channel);
+                this.subscription = null;
+            });
+        }
+    }
+
+    /**
+     * Fetches data from an external API through an Apex method.
+     */
+    handleExternal() {
+        this.isLoading = true; // Show spinner before making the request
+      
+        makeGetRequest()
+            .then(result => {
+                console.log('Data fetched successfully:', result);
+                this.error = undefined;
+            })
+            .catch(error => {
+                this.error = error;
+                console.error('Failed to fetch data:', error);
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Error fetching data',
+                    message: 'An error occurred while fetching data. Please check the logs for more details.',
+                    variant: 'error'
+                }));
+            });
+    }
+
+   /**
+ * Resets the component to its initial state without re-fetching data from the API.
+ */
+handleRefresh() {
+    // Clearing data and resetting component state
+    this.events = [];          // Clears the current display data
+    this.allEvents = [];       // Clears all fetched data
+    this.selectedContacts = []; // Clears any selected contacts
+    this.currentPage = 1;     // Resets pagination to the first page
+    this.totalRecords = 0;    // Resets the count of total records
+    this.totalPages = 0;      // Resets the count of total pages
+    this.showData = false;    // Hides the data-related UI elements
+
+    // Optional: Reset any additional states or properties if necessary
+
+    // Update the UI to reflect the reset state
+    this.updateButtonStates();
+
+    // Optionally display a toast message to confirm the component has been refreshed
+    this.dispatchEvent(new ShowToastEvent({
+        title: 'Component Refreshed',
+        message: 'The component has been reset to its initial state.',
+        variant: 'success'
+    }));
+}
+
+    /**
+     * Handles the selection of rows in the datatable.
+     */
+    getSelectedRows(event) {
+        this.selectedContacts = event.detail.selectedRows;
+    }
+
+    /**
+     * Saves the selected contacts to Salesforce by calling an Apex method.
+     */
+    saveSelectedContacts() {
+        const contactListJson = JSON.stringify({ data: this.selectedContacts });
+        saveContacts({ contactListJson })
+            .then(result => {
+                console.log('Contacts saved:', result);
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Contacts have been successfully saved.',
+                    variant: 'success'
+                }));
+                this.selectedContacts = [];  // Clear the selection after save
+            })
+            .catch(error => {
+                console.error('Error saving contacts:', error);
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Error saving contacts',
+                    message: 'Failed to save contacts. Please check the logs for more details.',
+                    variant: 'error'
+                }));
+            });
+    }
+
+    /**
+     * Updates the data displayed based on the current page.
+     */
+    updatePageData() {
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = this.currentPage * this.pageSize;
+        this.events = this.allEvents.slice(start, end);
+        this.updateButtonStates();
+    }
+
+    /**
+     * Updates the enabled/disabled state of the pagination buttons.
+     */
+    updateButtonStates() {
+        this.isPrevDisabled = this.currentPage <= 1;
+        this.isNextDisabled = this.currentPage >= this.totalPages;
+    }
+
+    /**
+     * Moves to the next page of data.
+     */
+    nextPage() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+            this.updatePageData();
+        }
+    }
+
+    /**
+     * Returns to the previous page of data.
+     */
+    previousPage() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.updatePageData();
+        }
+    }
+}

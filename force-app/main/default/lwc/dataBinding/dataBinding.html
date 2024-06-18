@@ -1,0 +1,21 @@
+<template>
+
+    <lightning-card title="Hello World First Component">
+        <lightning-input label="Name" value={Name} onchange={handleChange}></lightning-input>
+        <lightning-input label="Email" value={Email} onchange={handleChange}></lightning-input>
+        <lightning-button variant="Brand" label="Click me" onclick={handleClick}></lightning-button>
+        <h1>Hello World</h1>
+        <lightning-icon icon-name="utility:agent_home" alternative-text="Preview" title="Preview"></lightning-icon>
+        <lightning-icon icon-name="standard:account_info" alternative-text="Preview" title="Preview"></lightning-icon>
+        <lightning-map map-markers={mapMarkers}> </lightning-map>
+        
+        <div>
+            <template if:true={showSpinner}>
+
+            </template>
+            <lightning-spinner alternative-text="Loading" size="xx-small" ></lightning-spinner>
+        </div>
+    </lightning-card>
+    
+
+</template>

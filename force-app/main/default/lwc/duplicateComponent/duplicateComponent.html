@@ -1,0 +1,32 @@
+<template>
+    <lightning-card title="Merge Duplicate Records" icon-name="custom:custom63">
+        <template if:true={duplicates}>
+            <lightning-combobox label="Select Master Record"
+                                options={duplicateOptions}
+                                value={selectedMasterId}
+                                onchange={handleMasterSelection}></lightning-combobox>
+            <lightning-combobox label="Select Merge Record"
+                                options={duplicateOptions}
+                                value={selectedMergeId}
+                                onchange={handleMergeSelection}></lightning-combobox>
+
+            <template for:each={formattedFields} for:item="field">
+                <div key={field.apiName} class="slds-p-around_medium">
+                    <lightning-input label={field.label}
+                                     name={field.apiName}
+                                     value={field.value}
+                                     onchange={handleFieldChange}>
+                    </lightning-input>
+                </div>
+            </template>
+
+            <lightning-button variant="brand"
+                              label="Merge Records"
+                              onclick={handleMerge}
+                              class="slds-m-top_medium">
+            </lightning-button>
+        </template>
+    </lightning-card>
+
+    
+</template>

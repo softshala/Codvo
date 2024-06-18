@@ -1,0 +1,39 @@
+Assume There is object A, B, and C. all the 3 objects have a currency field 'Amount' on it,
+ If the amount field is updated on Object B, 
+ The amount is equally distributed amongst all C records, 
+ and the the amount is rolled up to A.
+
+
+ Trigger Btrigger on B(After insert){
+
+    if(Trigger.isinsert && Trigger.isafter){
+        BController.equalMethod(Trigger.NewMap);
+    }
+
+ }
+
+ public class BController{
+
+    public static void equalMethod(Map<id,B> Bmap){
+
+        Set<String> AIds = new Set<String>();
+        Map<String,Integer> TotalACount = new Map<String,Integer>()
+        for(B bval: Bmap.values()){
+            AIds.add(bval.AId);
+        }
+
+        List<AggregateResult> AgrList = [Select AId, Count(Id)total from B Group BY AId where AId IN:AIds ];
+        List<A> AList = [Select Id, Amount from A where Id IN : AIds];
+        for(AggregateResult Agr: AgrList){
+            if(Agr ! = null){
+                TotalACount.put(Agr.get(AId),Agr.get(total))
+            }
+        }
+
+        for(A aVal:AList){
+            aVal.Amount = TotalACount.get(aVal.Id);
+        }
+
+        update AList;
+    }
+ }

@@ -1,0 +1,48 @@
+<template>
+    <lightning-card title="Merge Duplicate Records" icon-name="custom:custom63">
+        <lightning-datatable
+            key-field="Id"
+            data={duplicates}
+            columns={columns}
+            onrowaction={handleRowAction}
+            hide-checkbox-column>
+        </lightning-datatable>
+
+        <template if:true={areBothRecordsSelected}>
+           
+                <p><strong>Master Record:</strong> {selectedMaster.Name} ({selectedMaster.Email})</p>
+                <p><strong>Merge Record:</strong> {selectedMerge.Name} ({selectedMerge.Email})</p>
+                <lightning-card title="Select Fields" icon-name="custom:custom63">
+                    <div class="slds-m-around_medium">
+                        <lightning-dual-listbox
+                name="fieldsToMerge"
+                label="Select Fields to Merge from Merge Record to Master Record"
+                source-label="Fields in Master"
+                selected-label="Fields to Merge"
+                options={fieldOptions}
+                value={selectedMergeFields} 
+                onchange={handleFieldChange}>
+            </lightning-dual-listbox>
+                    </div>
+                </lightning-card>
+                <lightning-button 
+                    label="Merge Records" 
+                    variant="brand" 
+                    onclick={handleMerge} 
+                    class="slds-m-top_small">
+                </lightning-button>
+
+                <lightning-button label="Previous" isdisabled={disablePrevious}>
+
+                </lightning-button>
+
+                <lightning-button label="Next" isdisabled={disablePrevious} onclick={handleNext}>
+
+                </lightning-button>
+
+
+                
+          
+        </template>
+    </lightning-card>
+</template>

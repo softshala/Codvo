@@ -1,0 +1,27 @@
+A percentage, B total cost of revenue, C
+
+
+trigger totalTrigger on B(after insert){
+
+}
+
+
+public class BCOntroller{
+    public static void RevenueMethod(Map<Id,B> Bmap){
+
+        map<String,Integer> totalCountMap = new map<String, Integer>();
+
+        List<AggregateResult> agrList = [Select B.Id, Cou]
+
+
+        List<C> CList = [Select Id, Revenue, B.id, B.A.percentage, b.totalCost from C where B.Id IN : Bmap.keyset()];
+        for(C cval : CList){
+            cval.Revenue = ((cval.b.totalCost) * (cval.B.A.percentage) / ));
+        }
+
+        update CList;
+
+
+
+    }
+}

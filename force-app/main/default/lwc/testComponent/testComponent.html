@@ -1,0 +1,10 @@
+<template>
+    <lightning-card class="slds-p-around_large" title="Contact Form">    
+        <lightning-input class="slds-p-around_large" label="Firstname" value={data.Firstname} type="text" onchange={handleChange}></lightning-input>
+        <lightning-input class="slds-p-around_large" label="Lastname" value={data.Lastname} type="text" onchange={handleChange}></lightning-input>
+        <lightning-input class="slds-p-around_large" label="Email" value={data.Email} type="email" onchange={handleChange}></lightning-input>
+        <lightning-input class="slds-p-around_large" label="DOB" value={data.DOB} type="date" onchange={handleChange}></lightning-input>
+        <lightning-input class="slds-p-around_large" label="Phone" value={data.Phone} type="number" onchange={handleChange}></lightning-input>
+        <lightning-button class="slds-p-around_large" label="Submit" onclick={handleSubmit}></lightning-button>
+    </lightning-card>
+</template>
